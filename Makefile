@@ -45,12 +45,21 @@ RGBASM  ?= $(RGBDS)rgbasm
 RGBFIX  ?= $(RGBDS)rgbfix
 RGBGFX  ?= $(RGBDS)rgbgfx
 RGBLINK ?= $(RGBDS)rgblink
+PYTHON  ?= python3
+
+VERSION_FILE ?= VERSION
+TITLE_IS_DIRTY ?= $(shell test -z "$$(git status --porcelain --untracked-files=normal 2>/dev/null)" || echo 1)
+TITLE_TAG_YEAR ?= $(shell if test -z "$(TITLE_IS_DIRTY)" && git describe --exact-match --tags HEAD >/dev/null 2>&1; then git log -1 --format=%cs HEAD | cut -d- -f1; fi)
+TITLE_COPYRIGHT_YEAR ?= $(or $(TITLE_TAG_YEAR),$(shell date +%Y))
+TITLE_VERSION_BASE ?= $(strip $(shell cat $(VERSION_FILE) 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || echo dev))
+TITLE_VERSION_DIRTY_SUFFIX ?= $(if $(TITLE_IS_DIRTY),-D)
+TITLE_VERSION ?= $(TITLE_VERSION_BASE)$(TITLE_VERSION_DIRTY_SUFFIX)
 
 
 ### Build targets
 
 .SUFFIXES:
-.PHONY: all crystal crystal11 crystal_au crystal_debug crystal11_debug clean tidy compare tools
+.PHONY: all crystal crystal11 crystal_au crystal_debug crystal11_debug clean tidy compare tools FORCE
 .SECONDEXPANSION:
 .PRECIOUS:
 .SECONDARY:
@@ -241,7 +250,9 @@ gfx/mystery_gift/mystery_gift.2bpp: tools/gfx += --trim-whitespace
 
 gfx/title/crystal.2bpp: tools/gfx += --interleave --png=$<
 gfx/title/old_fg.2bpp: tools/gfx += --interleave --png=$<
-gfx/title/logo.2bpp: rgbgfx += -x 4
+gfx/title/logo.2bpp: gfx/title/logo.png $(VERSION_FILE) tools/title_version_gfx.py FORCE
+	$(RGBGFX) -x 4 -o $@ $<
+	$(PYTHON) tools/title_version_gfx.py --year "$(TITLE_COPYRIGHT_YEAR)" --version "$(TITLE_VERSION)" --output $@ --tiles 18 --tile-start 0x8c --text-x 13 --dark 2 --include-copy
 
 gfx/trade/ball.2bpp: tools/gfx += --remove-whitespace
 gfx/trade/game_boy.2bpp: tools/gfx += --remove-duplicates --preserve=0x23,0x27

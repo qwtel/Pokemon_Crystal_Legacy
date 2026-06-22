@@ -22,6 +22,7 @@ gfx/pokemon/*/frames.asm
 # rgbds extras
 *.map
 *.sym
+rgbds-*
 
 # tool binaries
 *.exe
@@ -56,6 +57,7 @@ used_space.png
 *.ss8
 *.ss9
 *.cheats
+*.s1
 
 # rgbenv file
 .bashrc
@@ -70,3 +72,6 @@ used_space.png
 
 # macos files
 .DS_STORE
+
+# other
+.vscode
